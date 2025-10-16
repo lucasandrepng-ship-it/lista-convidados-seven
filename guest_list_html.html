@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista Convidados Seven Eventos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gold: #d4af37;
+            --gold-light: #f4d47c;
+            --dark: #0a0a0a;
+            --gray: #1a1a1a;
+            --white: #ffffff;
+            --cream: #f5f5f0;
+            --green: #22c55e;
+            --red: #ef4444;
+            --purple: #a855f7;
+        }
+
+        body {
+            font-family: Georgia, serif;
+            background: var(--dark);
+            color: var(--white);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .logo-text {
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            font-style: italic;
+        }
+
+        .subtitle {
+            color: var(--cream);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--gray);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            color: var(--gold);
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--cream);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .btn {
+            padding: 1.2rem 2rem;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            background: var(--gray);
+            color: var(--cream);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: Georgia, serif;
+            font-size: 1rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--dark);
+            border-color: var(--gold);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.5);
+        }
+
+        .btn-danger:hover {
+            background: var(--red);
+            color: var(--white);
+            border-color: var(--red);
+        }
+
+        .card {
+            background: var(--gray);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            color: var(--gold);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 1rem;
+            background: var(--dark);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: var(--cream);
+            font-family: Georgia, serif;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--dark);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox-label:hover {
+            border-color: var(--gold);
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--gold);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.8rem 1.5rem;
+            background: var(--dark);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: var(--cream);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: Georgia, serif;
+            letter-spacing: 0.05em;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+            color: var(--dark);
+            border-color: var(--gold);
+        }
+
+        .guest-item {
+            background: var(--gray);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 1.5rem;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .guest-item:hover {
+            border-color: var(--gold);
+            box-shadow: 0 5px 20px rgba(212, 175, 55, 0.2);
+        }
+
+        .guest-item.checked {
+            border-color: var(--green);
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .guest-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: var(--gold);
+        }
+
+        .guest-info {
+            flex: 1;
+        }
+
+        .guest-name {
+            font-size: 1.2rem;
+            color: var(--cream);
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+            letter-spacing: 0.03em;
+        }
+
+        .guest-item.checked .guest-name {
+            color: var(--green);
+        }
+
+        .guest-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 2px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        .tag-additional {
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--gold);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .tag-minor {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--purple);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .tag-time {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--green);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-minor {
+            padding: 0.6rem 1.2rem;
+            background: var(--dark);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            color: var(--cream);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: Georgia, serif;
+            font-size: 0.85rem;
+        }
+
+        .btn-minor.active {
+            background: var(--purple);
+            border-color: var(--purple);
+            color: var(--white);
+        }
+
+        .btn-minor:hover {
+            border-color: var(--gold);
+        }
+
+        .btn-remove {
+            padding: 0.6rem 1rem;
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--red);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .btn-remove:hover {
+            background: var(--red);
+            color: var(--white);
+            border-color: var(--red);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--cream);
+            opacity: 0.5;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .logo-text {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .actions-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .guest-item {
+                grid-template-columns: auto 1fr;
+                gap: 1rem;
+            }
+
+            .btn-minor,
+            .btn-remove {
+                grid-column: 2;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="logo-text">Seven Eventos</h1>
+            <p class="subtitle">Lista de Convidados</p>
+        </div>
+
+        <div id="stats" class="stats-grid"></div>
+
+        <div class="actions-grid">
+            <button class="btn" onclick="toggleImport()">📤 Importar Lista</button>
+            <button class="btn" onclick="downloadReport()">📥 Baixar Relatório</button>
+            <button class="btn btn-danger" onclick="clearAll()">🗑️ Limpar Tudo</button>
+        </div>
+
+        <div id="importSection" class="card hidden">
+            <h3 class="card-title">Importar Lista de Convidados</h3>
+            <p style="color: var(--cream); margin-bottom: 1rem; font-size: 0.95rem;">Cole a lista de nomes, um por linha:</p>
+            <textarea id="importText" placeholder="João Silva&#10;Maria Santos&#10;Pedro Oliveira"></textarea>
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: 1rem;">
+                <button class="btn" onclick="importList()">Importar Agora</button>
+                <button class="btn" onclick="toggleImport()">Cancelar</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="card-title">Adicionar Convidado</h3>
+            <div class="form-row">
+                <input type="text" id="newGuestName" placeholder="Nome do convidado">
+                <label class="checkbox-label" style="margin: 0;">
+                    <input type="checkbox" id="isMinor">
+                    <span style="color: var(--cream);">Menor de 18</span>
+                </label>
+                <button class="btn" onclick="addGuest()">Adicionar</button>
+            </div>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" onclick="setFilter(event, 'all')">Todos</button>
+            <button class="filter-btn" onclick="setFilter(event, 'present')">✅ Presentes</button>
+            <button class="filter-btn" onclick="setFilter(event, 'absent')">⏳ Ausentes</button>
+            <button class="filter-btn" onclick="setFilter(event, 'minors')">👶 Menores</button>
+            <button class="filter-btn" onclick="setFilter(event, 'additional')">⭐ Adicionais</button>
+        </div>
+
+        <div id="guestList"></div>
+    </div>
+
+    <script>
+        let guests = [];
+        let currentFilter = 'all';
+
+        function loadGuests() {
+            const saved = localStorage.getItem('sevenEventosGuestList');
+            if (saved) {
+                try {
+                    guests = JSON.parse(saved);
+                } catch(e) {
+                    guests = [];
+                }
+            }
+            render();
+        }
+
+        function saveGuests() {
+            localStorage.setItem('sevenEventosGuestList', JSON.stringify(guests));
+        }
+
+        function addGuest() {
+            const nameInput = document.getElementById('newGuestName');
+            const minorCheckbox = document.getElementById('isMinor');
+            const name = nameInput.value.trim();
+            
+            if (name) {
+                guests.push({
+                    id: Date.now(),
+                    name: name,
+                    checked: false,
+                    isMinor: minorCheckbox.checked,
+                    isAdditional: true,
+                    checkedAt: null
+                });
+                nameInput.value = '';
+                minorCheckbox.checked = false;
+                saveGuests();
+                render();
+            }
+        }
+
+        function toggleGuest(id) {
+            guests = guests.map(function(g) {
+                if (g.id === id) {
+                    return {
+                        id: g.id,
+                        name: g.name,
+                        checked: !g.checked,
+                        isMinor: g.isMinor,
+                        isAdditional: g.isAdditional,
+                        checkedAt: !g.checked ? new Date().toISOString() : null
+                    };
+                }
+                return g;
+            });
+            saveGuests();
+            render();
+        }
+
+        function toggleMinor(id) {
+            guests = guests.map(function(g) {
+                if (g.id === id) {
+                    return {
+                        id: g.id,
+                        name: g.name,
+                        checked: g.checked,
+                        isMinor: !g.isMinor,
+                        isAdditional: g.isAdditional,
+                        checkedAt: g.checkedAt
+                    };
+                }
+                return g;
+            });
+            saveGuests();
+            render();
+        }
+
+        function removeGuest(id) {
+            if (confirm('Deseja remover este convidado?')) {
+                guests = guests.filter(function(g) { return g.id !== id; });
+                saveGuests();
+                render();
+            }
+        }
+
+        function toggleImport() {
+            const section = document.getElementById('importSection');
+            section.classList.toggle('hidden');
+        }
+
+        function importList() {
+            const text = document.getElementById('importText').value;
+            const lines = text.split('\n').filter(function(line) { return line.trim(); });
+            
+            lines.forEach(function(line, index) {
+                guests.push({
+                    id: Date.now() + index,
+                    name: line.trim(),
+                    checked: false,
+                    isMinor: false,
+                    isAdditional: false,
+                    checkedAt: null
+                });
+            });
+            
+            document.getElementById('importText').value = '';
+            toggleImport();
+            saveGuests();
+            render();
+        }
+
+        function clearAll() {
+            if (confirm('Deseja limpar toda a lista? Esta ação não pode ser desfeita.')) {
+                guests = [];
+                saveGuests();
+                render();
+            }
+        }
+
+        function setFilter(event, filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            render();
+        }
+
+        function downloadReport() {
+            const stats = getStats();
+            const timestamp = new Date().toLocaleString('pt-BR');
+            
+            let report = '═══════════════════════════════════════════════════════════\n';
+            report += '           SEVEN EVENTOS - RELATÓRIO DE CONVIDADOS         \n';
+            report += '═══════════════════════════════════════════════════════════\n\n';
+            report += 'Data/Hora: ' + timestamp + '\n\n';
+            
+            report += '───────────────────────────────────────────────────────────\n';
+            report += '                    RESUMO DO EVENTO\n';
+            report += '───────────────────────────────────────────────────────────\n\n';
+            report += 'Total de Convidados: ' + stats.total + '\n';
+            report += 'Presentes: ' + stats.present + ' (' + ((stats.present/stats.total)*100 || 0).toFixed(1) + '%)\n';
+            report += 'Ausentes: ' + stats.absent + ' (' + ((stats.absent/stats.total)*100 || 0).toFixed(1) + '%)\n';
+            report += 'Menores de 18 anos: ' + stats.minors + '\n';
+            report += 'Convidados Adicionais: ' + stats.additional + '\n\n';
+            
+            const sortedGuests = guests.slice().sort(function(a, b) { return a.name.localeCompare(b.name); });
+            
+            report += '───────────────────────────────────────────────────────────\n';
+            report += '                 PRESENTES (' + stats.present + ')\n';
+            report += '───────────────────────────────────────────────────────────\n\n';
+            sortedGuests.filter(function(g) { return g.checked; }).forEach(function(guest, i) {
+                const tags = [];
+                if (guest.isMinor) tags.push('MENOR');
+                if (guest.isAdditional) tags.push('ADICIONAL');
+                const tagStr = tags.length > 0 ? ' [' + tags.join(', ') + ']' : '';
+                const time = guest.checkedAt ? ' - ' + new Date(guest.checkedAt).toLocaleTimeString('pt-BR') : '';
+                report += (i + 1).toString().padStart(3, ' ') + '. ' + guest.name + tagStr + time + '\n';
+            });
+            
+            report += '\n───────────────────────────────────────────────────────────\n';
+            report += '                 AUSENTES (' + stats.absent + ')\n';
+            report += '───────────────────────────────────────────────────────────\n\n';
+            sortedGuests.filter(function(g) { return !g.checked; }).forEach(function(guest, i) {
+                const tags = [];
+                if (guest.isMinor) tags.push('MENOR');
+                if (guest.isAdditional) tags.push('ADICIONAL');
+                const tagStr = tags.length > 0 ? ' [' + tags.join(', ') + ']' : '';
+                report += (i + 1).toString().padStart(3, ' ') + '. ' + guest.name + tagStr + '\n';
+            });
+            
+            report += '\n═══════════════════════════════════════════════════════════\n';
+            report += '              www.seveneventosrj.com.br\n';
+            report += '═══════════════════════════════════════════════════════════\n';
+            
+            const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'seven-eventos-relatorio-' + new Date().toISOString().split('T')[0] + '.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function getStats() {
+            return {
+                total: guests.length,
+                present: guests.filter(function(g) { return g.checked; }).length,
+                absent: guests.filter(function(g) { return !g.checked; }).length,
+                minors: guests.filter(function(g) { return g.isMinor; }).length,
+                additional: guests.filter(function(g) { return g.isAdditional; }).length
+            };
+        }
+
+        function getFilteredGuests() {
+            if (currentFilter === 'present') return guests.filter(function(g) { return g.checked; });
+            if (currentFilter === 'absent') return guests.filter(function(g) { return !g.checked; });
+            if (currentFilter === 'minors') return guests.filter(function(g) { return g.isMinor; });
+            if (currentFilter === 'additional') return guests.filter(function(g) { return g.isAdditional; });
+            return guests;
+        }
+
+        function render() {
+            const stats = getStats();
+            
+            document.getElementById('stats').innerHTML = 
+                '<div class="stat-card"><div class="stat-number">' + stats.total + '</div><div class="stat-label">Total</div></div>' +
+                '<div class="stat-card"><div class="stat-number" style="color: var(--green)">' + stats.present + '</div><div class="stat-label">Presentes</div></div>' +
+                '<div class="stat-card"><div class="stat-number" style="color: var(--red)">' + stats.absent + '</div><div class="stat-label">Ausentes</div></div>' +
+                '<div class="stat-card"><div class="stat-number" style="color: var(--purple)">' + stats.minors + '</div><div class="stat-label">Menores</div></div>' +
+                '<div class="stat-card"><div class="stat-number">' + stats.additional + '</div><div class="stat-label">Adicionais</div></div>';
+            
+            const filtered = getFilteredGuests();
+            let listHtml = '';
+            
+            if (filtered.length === 0) {
+                listHtml = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>Nenhum convidado na lista</p></div>';
+            } else {
+                filtered.forEach(function(guest) {
+                    const checkedClass = guest.checked ? 'checked' : '';
+                    const nameColor = guest.checked ? 'color: var(--green)' : 'color: var(--cream)';
+                    const additionalTag = guest.isAdditional ? '<span class="tag tag-additional">⭐ Adicional</span>' : '';
+                    const minorTag = guest.isMinor ? '<span class="tag tag-minor">👶 Menor de 18</span>' : '';
+                    const timeTag = guest.checkedAt ? '<span class="tag tag-time">🕐 ' + new Date(guest.checkedAt).toLocaleTimeString('pt-BR') + '</span>' : '';
+                    const minorBtnClass = guest.isMinor ? 'active' : '';
+                    
+                    listHtml += '<div class="guest-item ' + checkedClass + '">' +
+                        '<input type="checkbox" class="guest-checkbox" ' + (guest.checked ? 'checked' : '') + ' onchange="toggleGuest(' + guest.id + ')">' +
+                        '<div class="guest-info">' +
+                            '<div class="guest-name" style="' + nameColor + '">' + guest.name + '</div>' +
+                            '<div class="guest-tags">' + additionalTag + minorTag + timeTag + '</div>' +
+                        '</div>' +
+                        '<button class="btn-minor ' + minorBtnClass + '" onclick="toggleMinor(' + guest.id + ')">-18</button>' +
+                        '<button class="btn-remove" onclick="removeGuest(' + guest.id + ')">✕</button>' +
+                    '</div>';
+                });
+            }
+            
+            document.getElementById('guestList').innerHTML = listHtml;
+        }
+
+        document.getElementById('newGuestName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addGuest();
+        });
+
+        loadGuests();
+    </script>
+</body>
+</html>

@@ -508,14 +508,15 @@
             const name = nameInput.value.trim();
             
             if (name) {
-                guests.push({
-                    id: Date.now(),
+                const newGuest = {
+                    id: Date.now() + Math.random(), // Garante ID único
                     name: name,
                     checked: false,
                     isMinor: minorCheckbox.checked,
                     isAdditional: true,
                     checkedAt: null
-                });
+                };
+                guests.push(newGuest);
                 nameInput.value = '';
                 minorCheckbox.checked = false;
                 saveGuests();
@@ -578,7 +579,7 @@
             
             lines.forEach(function(line, index) {
                 guests.push({
-                    id: Date.now() + index,
+                    id: Date.now() + index + Math.random(), // Garante ID único
                     name: line.trim(),
                     checked: false,
                     isMinor: false,
@@ -708,12 +709,23 @@
                 '<div class="stat-card"><div class="stat-number">' + stats.additional + '</div><div class="stat-label">Adicionais</div></div>';
             
             const filtered = getFilteredGuests();
+            
+            // Remove duplicatas baseado no ID
+            const uniqueFiltered = [];
+            const seenIds = new Set();
+            filtered.forEach(function(guest) {
+                if (!seenIds.has(guest.id)) {
+                    seenIds.add(guest.id);
+                    uniqueFiltered.push(guest);
+                }
+            });
+            
             let listHtml = '';
             
-            if (filtered.length === 0) {
-                listHtml = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>Nenhum convidado na lista</p></div>';
+            if (uniqueFiltered.length === 0) {
+                listHtml = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>Nenhum convidado encontrado</p></div>';
             } else {
-                filtered.forEach(function(guest) {
+                uniqueFiltered.forEach(function(guest) {
                     const checkedClass = guest.checked ? 'checked' : '';
                     const nameColor = guest.checked ? 'color: var(--green)' : 'color: var(--cream)';
                     const additionalTag = guest.isAdditional ? '<span class="tag tag-additional">⭐ Adicional</span>' : '';

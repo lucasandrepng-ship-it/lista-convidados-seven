@@ -420,26 +420,6 @@
 
         <div id="stats" class="stats-grid"></div>
 
-        <!-- BARRA DE BUSCA -->
-        <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <span style="font-size: 2rem; color: var(--gold);">🔍</span>
-                <div style="flex: 1;">
-                    <h3 style="color: var(--gold); font-size: 1.3rem; margin-bottom: 0.5rem; font-weight: 300;">Buscar Convidado</h3>
-                    <input 
-                        type="text" 
-                        id="searchInput" 
-                        placeholder="Digite o nome do convidado para encontrá-lo rapidamente..." 
-                        style="margin: 0; font-size: 1.1rem; padding: 1.2rem;"
-                        onkeyup="searchGuests()"
-                    >
-                </div>
-            </div>
-            <p style="color: var(--cream); font-size: 0.85rem; margin-top: 1rem; margin-bottom: 0; opacity: 0.7;">
-                💡 Digite qualquer parte do nome para filtrar a lista instantaneamente
-            </p>
-        </div>
-
         <div class="actions-grid">
             <button class="btn" onclick="toggleImport()">📤 Importar Lista</button>
             <button class="btn" onclick="downloadReport()">📥 Baixar Relatório</button>
@@ -476,7 +456,24 @@
             <button class="filter-btn" onclick="setFilter(event, 'additional')">⭐ Adicionais</button>
         </div>
 
-        <div id="guestList"></div>
+        <!-- BARRA DE BUSCA GRUDADA NA LISTA -->
+        <div class="card" style="margin-bottom: 0; border-bottom: none; background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 100%);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-size: 2.5rem; color: var(--gold);">🔍</span>
+                <div style="flex: 1;">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Digite o nome para buscar instantaneamente..." 
+                        style="margin: 0; font-size: 1.2rem; padding: 1.3rem; background: var(--dark); border: 2px solid var(--gold);"
+                        onkeyup="searchGuests()"
+                        autofocus
+                    >
+                </div>
+            </div>
+        </div>
+
+        <div id="guestList" class="space-y-2">
     </div>
 
     <script>

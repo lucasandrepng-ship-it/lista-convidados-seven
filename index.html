@@ -420,6 +420,26 @@
 
         <div id="stats" class="stats-grid"></div>
 
+        <!-- BARRA DE BUSCA -->
+        <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-size: 2rem; color: var(--gold);">🔍</span>
+                <div style="flex: 1;">
+                    <h3 style="color: var(--gold); font-size: 1.3rem; margin-bottom: 0.5rem; font-weight: 300;">Buscar Convidado</h3>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Digite o nome do convidado para encontrá-lo rapidamente..." 
+                        style="margin: 0; font-size: 1.1rem; padding: 1.2rem;"
+                        onkeyup="searchGuests()"
+                    >
+                </div>
+            </div>
+            <p style="color: var(--cream); font-size: 0.85rem; margin-top: 1rem; margin-bottom: 0; opacity: 0.7;">
+                💡 Digite qualquer parte do nome para filtrar a lista instantaneamente
+            </p>
+        </div>
+
         <div class="actions-grid">
             <button class="btn" onclick="toggleImport()">📤 Importar Lista</button>
             <button class="btn" onclick="downloadReport()">📥 Baixar Relatório</button>
@@ -462,6 +482,12 @@
     <script>
         let guests = [];
         let currentFilter = 'all';
+        let searchTerm = '';
+
+        function searchGuests() {
+            searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            render();
+        }
 
         function loadGuests() {
             const saved = localStorage.getItem('sevenEventosGuestList');
@@ -583,7 +609,9 @@
             document.querySelectorAll('.filter-btn').forEach(function(btn) {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
             render();
         }
 
@@ -654,11 +682,22 @@
         }
 
         function getFilteredGuests() {
-            if (currentFilter === 'present') return guests.filter(function(g) { return g.checked; });
-            if (currentFilter === 'absent') return guests.filter(function(g) { return !g.checked; });
-            if (currentFilter === 'minors') return guests.filter(function(g) { return g.isMinor; });
-            if (currentFilter === 'additional') return guests.filter(function(g) { return g.isAdditional; });
-            return guests;
+            let filtered = guests;
+            
+            // Apply filter
+            if (currentFilter === 'present') filtered = filtered.filter(function(g) { return g.checked; });
+            if (currentFilter === 'absent') filtered = filtered.filter(function(g) { return !g.checked; });
+            if (currentFilter === 'minors') filtered = filtered.filter(function(g) { return g.isMinor; });
+            if (currentFilter === 'additional') filtered = filtered.filter(function(g) { return g.isAdditional; });
+            
+            // Apply search
+            if (searchTerm) {
+                filtered = filtered.filter(function(g) {
+                    return g.name.toLowerCase().includes(searchTerm);
+                });
+            }
+            
+            return filtered;
         }
 
         function render() {

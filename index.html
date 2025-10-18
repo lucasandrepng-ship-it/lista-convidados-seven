@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista Convidados Seven Eventos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -21,6 +22,7 @@
             --green: #22c55e;
             --red: #ef4444;
             --purple: #a855f7;
+            --blue: #3b82f6;
         }
 
         body {
@@ -216,7 +218,7 @@
 
         .form-row {
             display: grid;
-            grid-template-columns: 1fr auto auto;
+            grid-template-columns: 1fr auto auto auto;
             gap: 1rem;
             align-items: start;
         }
@@ -253,7 +255,7 @@
             padding: 1.5rem;
             margin-bottom: 1rem;
             display: grid;
-            grid-template-columns: auto 1fr auto auto;
+            grid-template-columns: auto 1fr auto auto auto;
             gap: 1.5rem;
             align-items: center;
             transition: all 0.3s;
@@ -313,10 +315,16 @@
             border: 1px solid rgba(212, 175, 55, 0.3);
         }
 
-        .tag-minor {
+        .tag-minor18 {
             background: rgba(168, 85, 247, 0.2);
             color: var(--purple);
             border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .tag-minor8 {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--blue);
+            border: 1px solid rgba(59, 130, 246, 0.3);
         }
 
         .tag-time {
@@ -336,9 +344,15 @@
             font-size: 0.85rem;
         }
 
-        .btn-minor.active {
+        .btn-minor.active-18 {
             background: var(--purple);
             border-color: var(--purple);
+            color: var(--white);
+        }
+
+        .btn-minor.active-8 {
+            background: var(--blue);
+            border-color: var(--blue);
             color: var(--white);
         }
 
@@ -422,7 +436,7 @@
 
         <div class="actions-grid">
             <button class="btn" onclick="toggleImport()">📤 Importar Lista</button>
-            <button class="btn" onclick="downloadReport()">📥 Baixar Relatório</button>
+            <button class="btn" onclick="downloadExcelReport()">📥 Baixar Relatório Excel</button>
             <button class="btn btn-danger" onclick="clearAll()">🗑️ Limpar Tudo</button>
         </div>
 
@@ -441,8 +455,12 @@
             <div class="form-row">
                 <input type="text" id="newGuestName" placeholder="Nome do convidado">
                 <label class="checkbox-label" style="margin: 0;">
-                    <input type="checkbox" id="isMinor">
+                    <input type="checkbox" id="isMinor18">
                     <span style="color: var(--cream);">Menor de 18</span>
+                </label>
+                <label class="checkbox-label" style="margin: 0;">
+                    <input type="checkbox" id="isMinor8">
+                    <span style="color: var(--cream);">Menor de 8</span>
                 </label>
                 <button class="btn" onclick="addGuest()">Adicionar</button>
             </div>
@@ -452,11 +470,11 @@
             <button class="filter-btn active" onclick="setFilter(event, 'all')">Todos</button>
             <button class="filter-btn" onclick="setFilter(event, 'present')">✅ Presentes</button>
             <button class="filter-btn" onclick="setFilter(event, 'absent')">⏳ Ausentes</button>
-            <button class="filter-btn" onclick="setFilter(event, 'minors')">👶 Menores</button>
+            <button class="filter-btn" onclick="setFilter(event, 'minors18')">👶 Menores de 18</button>
+            <button class="filter-btn" onclick="setFilter(event, 'minors8')">🍼 Menores de 8</button>
             <button class="filter-btn" onclick="setFilter(event, 'additional')">⭐ Adicionais</button>
         </div>
 
-        <!-- BARRA DE BUSCA GRUDADA NA LISTA -->
         <div class="card" style="margin-bottom: 0; border-bottom: none; background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.08) 100%);">
             <div style="display: flex; align-items: center; gap: 1rem;">
                 <span style="font-size: 2.5rem; color: var(--gold);">🔍</span>
@@ -473,7 +491,7 @@
             </div>
         </div>
 
-        <div id="guestList" class="space-y-2">
+        <div id="guestList" class="space-y-2"></div>
     </div>
 
     <script>
@@ -487,7 +505,7 @@
         }
 
         function loadGuests() {
-            const saved = localStorage.getItem('sevenEventosGuestList');
+            const saved = sessionStorage.getItem('sevenEventosGuestList');
             if (saved) {
                 try {
                     guests = JSON.parse(saved);
@@ -499,26 +517,28 @@
         }
 
         function saveGuests() {
-            localStorage.setItem('sevenEventosGuestList', JSON.stringify(guests));
+            sessionStorage.setItem('sevenEventosGuestList', JSON.stringify(guests));
         }
 
         function addGuest() {
             const nameInput = document.getElementById('newGuestName');
-            const minorCheckbox = document.getElementById('isMinor');
+            const minor18Checkbox = document.getElementById('isMinor18');
+            const minor8Checkbox = document.getElementById('isMinor8');
             const name = nameInput.value.trim();
             
             if (name) {
-                const newGuest = {
-                    id: Date.now() + Math.random(), // Garante ID único
+                guests.push({
+                    id: Date.now(),
                     name: name,
                     checked: false,
-                    isMinor: minorCheckbox.checked,
+                    isMinor18: minor18Checkbox.checked,
+                    isMinor8: minor8Checkbox.checked,
                     isAdditional: true,
                     checkedAt: null
-                };
-                guests.push(newGuest);
+                });
                 nameInput.value = '';
-                minorCheckbox.checked = false;
+                minor18Checkbox.checked = false;
+                minor8Checkbox.checked = false;
                 saveGuests();
                 render();
             }
@@ -531,7 +551,8 @@
                         id: g.id,
                         name: g.name,
                         checked: !g.checked,
-                        isMinor: g.isMinor,
+                        isMinor18: g.isMinor18,
+                        isMinor8: g.isMinor8,
                         isAdditional: g.isAdditional,
                         checkedAt: !g.checked ? new Date().toISOString() : null
                     };
@@ -542,14 +563,34 @@
             render();
         }
 
-        function toggleMinor(id) {
+        function toggleMinor18(id) {
             guests = guests.map(function(g) {
                 if (g.id === id) {
                     return {
                         id: g.id,
                         name: g.name,
                         checked: g.checked,
-                        isMinor: !g.isMinor,
+                        isMinor18: !g.isMinor18,
+                        isMinor8: g.isMinor8,
+                        isAdditional: g.isAdditional,
+                        checkedAt: g.checkedAt
+                    };
+                }
+                return g;
+            });
+            saveGuests();
+            render();
+        }
+
+        function toggleMinor8(id) {
+            guests = guests.map(function(g) {
+                if (g.id === id) {
+                    return {
+                        id: g.id,
+                        name: g.name,
+                        checked: g.checked,
+                        isMinor18: g.isMinor18,
+                        isMinor8: !g.isMinor8,
                         isAdditional: g.isAdditional,
                         checkedAt: g.checkedAt
                     };
@@ -579,10 +620,11 @@
             
             lines.forEach(function(line, index) {
                 guests.push({
-                    id: Date.now() + index + Math.random(), // Garante ID único
+                    id: Date.now() + index,
                     name: line.trim(),
                     checked: false,
-                    isMinor: false,
+                    isMinor18: false,
+                    isMinor8: false,
                     isAdditional: false,
                     checkedAt: null
                 });
@@ -613,146 +655,145 @@
             render();
         }
 
-        function downloadReport() {
+        function downloadExcelReport() {
             const stats = getStats();
             const timestamp = new Date().toLocaleString('pt-BR');
             
-            let report = '═══════════════════════════════════════════════════════════\n';
-            report += '           SEVEN EVENTOS - RELATÓRIO DE CONVIDADOS         \n';
-            report += '═══════════════════════════════════════════════════════════\n\n';
-            report += 'Data/Hora: ' + timestamp + '\n\n';
+            const wb = XLSX.utils.book_new();
             
-            report += '───────────────────────────────────────────────────────────\n';
-            report += '                    RESUMO DO EVENTO\n';
-            report += '───────────────────────────────────────────────────────────\n\n';
-            report += 'Total de Convidados: ' + stats.total + '\n';
-            report += 'Presentes: ' + stats.present + ' (' + ((stats.present/stats.total)*100 || 0).toFixed(1) + '%)\n';
-            report += 'Ausentes: ' + stats.absent + ' (' + ((stats.absent/stats.total)*100 || 0).toFixed(1) + '%)\n';
-            report += 'Menores de 18 anos: ' + stats.minors + '\n';
-            report += 'Convidados Adicionais: ' + stats.additional + '\n\n';
+            // ABA 1: RESUMO
+            const summaryData = [
+                ['SEVEN EVENTOS - RELATÓRIO DE CONVIDADOS'],
+                [''],
+                ['Data/Hora do Relatório:', timestamp],
+                [''],
+                ['RESUMO DO EVENTO'],
+                [''],
+                ['Métrica', 'Quantidade', 'Percentual'],
+                ['Total de Convidados', stats.total, '100%'],
+                ['Presentes', stats.present, ((stats.present/stats.total)*100 || 0).toFixed(1) + '%'],
+                ['Ausentes', stats.absent, ((stats.absent/stats.total)*100 || 0).toFixed(1) + '%'],
+                ['Menores de 18 anos', stats.minors18, ((stats.minors18/stats.total)*100 || 0).toFixed(1) + '%'],
+                ['Menores de 8 anos', stats.minors8, ((stats.minors8/stats.total)*100 || 0).toFixed(1) + '%'],
+                ['Convidados Adicionais', stats.additional, ((stats.additional/stats.total)*100 || 0).toFixed(1) + '%']
+            ];
             
-            const sortedGuests = guests.slice().sort(function(a, b) { return a.name.localeCompare(b.name); });
+            const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+            wsSummary['!cols'] = [{wch: 30}, {wch: 15}, {wch: 15}];
+            XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumo');
             
-            report += '───────────────────────────────────────────────────────────\n';
-            report += '                 PRESENTES (' + stats.present + ')\n';
-            report += '───────────────────────────────────────────────────────────\n\n';
-            sortedGuests.filter(function(g) { return g.checked; }).forEach(function(guest, i) {
-                const tags = [];
-                if (guest.isMinor) tags.push('MENOR');
-                if (guest.isAdditional) tags.push('ADICIONAL');
-                const tagStr = tags.length > 0 ? ' [' + tags.join(', ') + ']' : '';
-                const time = guest.checkedAt ? ' - ' + new Date(guest.checkedAt).toLocaleTimeString('pt-BR') : '';
-                report += (i + 1).toString().padStart(3, ' ') + '. ' + guest.name + tagStr + time + '\n';
+            // ABA 2: PRESENTES
+            const presentGuests = guests.filter(g => g.checked).sort((a, b) => a.name.localeCompare(b.name));
+            const presentData = [
+                ['CONVIDADOS PRESENTES'],
+                [''],
+                ['Nº', 'Nome', 'Menor de 18', 'Menor de 8', 'Adicional', 'Horário Check-in']
+            ];
+            
+            presentGuests.forEach((guest, i) => {
+                presentData.push([
+                    i + 1,
+                    guest.name,
+                    guest.isMinor18 ? 'Sim' : 'Não',
+                    guest.isMinor8 ? 'Sim' : 'Não',
+                    guest.isAdditional ? 'Sim' : 'Não',
+                    guest.checkedAt ? new Date(guest.checkedAt).toLocaleTimeString('pt-BR') : ''
+                ]);
             });
             
-            report += '\n───────────────────────────────────────────────────────────\n';
-            report += '                 AUSENTES (' + stats.absent + ')\n';
-            report += '───────────────────────────────────────────────────────────\n\n';
-            sortedGuests.filter(function(g) { return !g.checked; }).forEach(function(guest, i) {
-                const tags = [];
-                if (guest.isMinor) tags.push('MENOR');
-                if (guest.isAdditional) tags.push('ADICIONAL');
-                const tagStr = tags.length > 0 ? ' [' + tags.join(', ') + ']' : '';
-                report += (i + 1).toString().padStart(3, ' ') + '. ' + guest.name + tagStr + '\n';
+            const wsPresent = XLSX.utils.aoa_to_sheet(presentData);
+            wsPresent['!cols'] = [{wch: 5}, {wch: 35}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 18}];
+            XLSX.utils.book_append_sheet(wb, wsPresent, 'Presentes');
+            
+            // ABA 3: AUSENTES
+            const absentGuests = guests.filter(g => !g.checked).sort((a, b) => a.name.localeCompare(b.name));
+            const absentData = [
+                ['CONVIDADOS AUSENTES'],
+                [''],
+                ['Nº', 'Nome', 'Menor de 18', 'Menor de 8', 'Adicional']
+            ];
+            
+            absentGuests.forEach((guest, i) => {
+                absentData.push([
+                    i + 1,
+                    guest.name,
+                    guest.isMinor18 ? 'Sim' : 'Não',
+                    guest.isMinor8 ? 'Sim' : 'Não',
+                    guest.isAdditional ? 'Sim' : 'Não'
+                ]);
             });
             
-            report += '\n═══════════════════════════════════════════════════════════\n';
-            report += '              www.seveneventosrj.com.br\n';
-            report += '═══════════════════════════════════════════════════════════\n';
+            const wsAbsent = XLSX.utils.aoa_to_sheet(absentData);
+            wsAbsent['!cols'] = [{wch: 5}, {wch: 35}, {wch: 15}, {wch: 15}, {wch: 15}];
+            XLSX.utils.book_append_sheet(wb, wsAbsent, 'Ausentes');
             
-            const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'seven-eventos-relatorio-' + new Date().toISOString().split('T')[0] + '.txt';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function getStats() {
-            return {
-                total: guests.length,
-                present: guests.filter(function(g) { return g.checked; }).length,
-                absent: guests.filter(function(g) { return !g.checked; }).length,
-                minors: guests.filter(function(g) { return g.isMinor; }).length,
-                additional: guests.filter(function(g) { return g.isAdditional; }).length
-            };
-        }
-
-        function getFilteredGuests() {
-            let filtered = guests;
+            // ABA 4: LISTA COMPLETA
+            const allGuestsData = [
+                ['LISTA COMPLETA DE CONVIDADOS'],
+                [''],
+                ['Nº', 'Nome', 'Status', 'Menor de 18', 'Menor de 8', 'Adicional', 'Horário Check-in']
+            ];
             
-            // Apply filter
-            if (currentFilter === 'present') filtered = filtered.filter(function(g) { return g.checked; });
-            if (currentFilter === 'absent') filtered = filtered.filter(function(g) { return !g.checked; });
-            if (currentFilter === 'minors') filtered = filtered.filter(function(g) { return g.isMinor; });
-            if (currentFilter === 'additional') filtered = filtered.filter(function(g) { return g.isAdditional; });
-            
-            // Apply search
-            if (searchTerm) {
-                filtered = filtered.filter(function(g) {
-                    return g.name.toLowerCase().includes(searchTerm);
-                });
-            }
-            
-            return filtered;
-        }
-
-        function render() {
-            const stats = getStats();
-            
-            document.getElementById('stats').innerHTML = 
-                '<div class="stat-card"><div class="stat-number">' + stats.total + '</div><div class="stat-label">Total</div></div>' +
-                '<div class="stat-card"><div class="stat-number" style="color: var(--green)">' + stats.present + '</div><div class="stat-label">Presentes</div></div>' +
-                '<div class="stat-card"><div class="stat-number" style="color: var(--red)">' + stats.absent + '</div><div class="stat-label">Ausentes</div></div>' +
-                '<div class="stat-card"><div class="stat-number" style="color: var(--purple)">' + stats.minors + '</div><div class="stat-label">Menores</div></div>' +
-                '<div class="stat-card"><div class="stat-number">' + stats.additional + '</div><div class="stat-label">Adicionais</div></div>';
-            
-            const filtered = getFilteredGuests();
-            
-            // Remove duplicatas baseado no ID
-            const uniqueFiltered = [];
-            const seenIds = new Set();
-            filtered.forEach(function(guest) {
-                if (!seenIds.has(guest.id)) {
-                    seenIds.add(guest.id);
-                    uniqueFiltered.push(guest);
-                }
+            const sortedGuests = guests.slice().sort((a, b) => a.name.localeCompare(b.name));
+            sortedGuests.forEach((guest, i) => {
+                allGuestsData.push([
+                    i + 1,
+                    guest.name,
+                    guest.checked ? 'Presente' : 'Ausente',
+                    guest.isMinor18 ? 'Sim' : 'Não',
+                    guest.isMinor8 ? 'Sim' : 'Não',
+                    guest.isAdditional ? 'Sim' : 'Não',
+                    guest.checkedAt ? new Date(guest.checkedAt).toLocaleTimeString('pt-BR') : ''
+                ]);
             });
             
-            let listHtml = '';
+            const wsAll = XLSX.utils.aoa_to_sheet(allGuestsData);
+            wsAll['!cols'] = [{wch: 5}, {wch: 35}, {wch: 12}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 18}];
+            XLSX.utils.book_append_sheet(wb, wsAll, 'Lista Completa');
             
-            if (uniqueFiltered.length === 0) {
-                listHtml = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>Nenhum convidado encontrado</p></div>';
-            } else {
-                uniqueFiltered.forEach(function(guest) {
-                    const checkedClass = guest.checked ? 'checked' : '';
-                    const nameColor = guest.checked ? 'color: var(--green)' : 'color: var(--cream)';
-                    const additionalTag = guest.isAdditional ? '<span class="tag tag-additional">⭐ Adicional</span>' : '';
-                    const minorTag = guest.isMinor ? '<span class="tag tag-minor">👶 Menor de 18</span>' : '';
-                    const timeTag = guest.checkedAt ? '<span class="tag tag-time">🕐 ' + new Date(guest.checkedAt).toLocaleTimeString('pt-BR') + '</span>' : '';
-                    const minorBtnClass = guest.isMinor ? 'active' : '';
-                    
-                    listHtml += '<div class="guest-item ' + checkedClass + '">' +
-                        '<input type="checkbox" class="guest-checkbox" ' + (guest.checked ? 'checked' : '') + ' onchange="toggleGuest(' + guest.id + ')">' +
-                        '<div class="guest-info">' +
-                            '<div class="guest-name" style="' + nameColor + '">' + guest.name + '</div>' +
-                            '<div class="guest-tags">' + additionalTag + minorTag + timeTag + '</div>' +
-                        '</div>' +
-                        '<button class="btn-minor ' + minorBtnClass + '" onclick="toggleMinor(' + guest.id + ')">-18</button>' +
-                        '<button class="btn-remove" onclick="removeGuest(' + guest.id + ')">✕</button>' +
-                    '</div>';
-                });
-            }
+            // ABA 5: MENORES DE 18
+            const minors18 = guests.filter(g => g.isMinor18).sort((a, b) => a.name.localeCompare(b.name));
+            const minors18Data = [
+                ['MENORES DE 18 ANOS'],
+                [''],
+                ['Nº', 'Nome', 'Status', 'Menor de 8', 'Adicional', 'Horário Check-in']
+            ];
             
-            document.getElementById('guestList').innerHTML = listHtml;
-        }
-
-        document.getElementById('newGuestName').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') addGuest();
-        });
-
-        loadGuests();
-    </script>
-</body>
-</html>
+            minors18.forEach((guest, i) => {
+                minors18Data.push([
+                    i + 1,
+                    guest.name,
+                    guest.checked ? 'Presente' : 'Ausente',
+                    guest.isMinor8 ? 'Sim' : 'Não',
+                    guest.isAdditional ? 'Sim' : 'Não',
+                    guest.checkedAt ? new Date(guest.checkedAt).toLocaleTimeString('pt-BR') : ''
+                ]);
+            });
+            
+            const wsMinors18 = XLSX.utils.aoa_to_sheet(minors18Data);
+            wsMinors18['!cols'] = [{wch: 5}, {wch: 35}, {wch: 12}, {wch: 15}, {wch: 15}, {wch: 18}];
+            XLSX.utils.book_append_sheet(wb, wsMinors18, 'Menores de 18');
+            
+            // ABA 6: MENORES DE 8
+            const minors8 = guests.filter(g => g.isMinor8).sort((a, b) => a.name.localeCompare(b.name));
+            const minors8Data = [
+                ['MENORES DE 8 ANOS'],
+                [''],
+                ['Nº', 'Nome', 'Status', 'Adicional', 'Horário Check-in']
+            ];
+            
+            minors8.forEach((guest, i) => {
+                minors8Data.push([
+                    i + 1,
+                    guest.name,
+                    guest.checked ? 'Presente' : 'Ausente',
+                    guest.isAdditional ? 'Sim' : 'Não',
+                    guest.checkedAt ? new Date(guest.checkedAt).toLocaleTimeString('pt-BR') : ''
+                ]);
+            });
+            
+            const wsMinors8 = XLSX.utils.aoa_to_sheet(minors8Data);
+            wsMinors8['!cols'] = [{wch: 5}, {wch: 35}, {wch: 12}, {wch: 15}, {wch: 18}];
+            XLSX.utils.book_append_sheet(wb, wsMinors8, 'Menores de 8');
+            
+            const fileName = 'Seven-Eventos-Relatorio-' + new Date().toISOString().split('

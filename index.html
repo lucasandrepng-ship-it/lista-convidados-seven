@@ -796,4 +796,87 @@
             wsMinors8['!cols'] = [{wch: 5}, {wch: 35}, {wch: 12}, {wch: 15}, {wch: 18}];
             XLSX.utils.book_append_sheet(wb, wsMinors8, 'Menores de 8');
             
-            const fileName = 'Seven-Eventos-Relatorio-' + new Date().toISOString().split('
+            const fileName = 'Seven-Eventos-Relatorio-' + new Date().toISOString().split('T')[0] + '.xlsx';
+            XLSX.writeFile(wb, fileName);
+        }
+
+        function getStats() {
+            return {
+                total: guests.length,
+                present: guests.filter(function(g) { return g.checked; }).length,
+                absent: guests.filter(function(g) { return !g.checked; }).length,
+                minors18: guests.filter(function(g) { return g.isMinor18; }).length,
+                minors8: guests.filter(function(g) { return g.isMinor8; }).length,
+                additional: guests.filter(function(g) { return g.isAdditional; }).length
+            };
+        }
+
+        function getFilteredGuests() {
+            let filtered = guests;
+            
+            if (currentFilter === 'present') filtered = filtered.filter(function(g) { return g.checked; });
+            if (currentFilter === 'absent') filtered = filtered.filter(function(g) { return !g.checked; });
+            if (currentFilter === 'minors18') filtered = filtered.filter(function(g) { return g.isMinor18; });
+            if (currentFilter === 'minors8') filtered = filtered.filter(function(g) { return g.isMinor8; });
+            if (currentFilter === 'additional') filtered = filtered.filter(function(g) { return g.isAdditional; });
+            
+            if (searchTerm) {
+                filtered = filtered.filter(function(g) {
+                    return g.name.toLowerCase().includes(searchTerm);
+                });
+            }
+            
+            return filtered;
+        }
+
+        function render() {
+            const stats = getStats();
+            
+            document.getElementById('stats').innerHTML = 
+                '<div class="stat-card"><div class="stat-number">' + stats.total + '</div><div class="stat-label">Total</div></div>' +
+                '<div class="stat-card"><div class="stat-number" style="color: var(--green)">' + stats.present + '</div><div class="stat-label">Presentes</div></div>' +
+                '<div class="stat-card"><div class="stat-number" style="color: var(--red)">' + stats.absent + '</div><div class="stat-label">Ausentes</div></div>' +
+                '<div class="stat-card"><div class="stat-number" style="color: var(--purple)">' + stats.minors18 + '</div><div class="stat-label">Menores 18</div></div>' +
+                '<div class="stat-card"><div class="stat-number" style="color: var(--blue)">' + stats.minors8 + '</div><div class="stat-label">Menores 8</div></div>' +
+                '<div class="stat-card"><div class="stat-number">' + stats.additional + '</div><div class="stat-label">Adicionais</div></div>';
+            
+            const filtered = getFilteredGuests();
+            let listHtml = '';
+            
+            if (filtered.length === 0) {
+                listHtml = '<div class="empty-state"><div class="empty-state-icon">👥</div><p>Nenhum convidado na lista</p></div>';
+            } else {
+                filtered.forEach(function(guest) {
+                    const checkedClass = guest.checked ? 'checked' : '';
+                    const nameColor = guest.checked ? 'color: var(--green)' : 'color: var(--cream)';
+                    const additionalTag = guest.isAdditional ? '<span class="tag tag-additional">⭐ Adicional</span>' : '';
+                    const minor18Tag = guest.isMinor18 ? '<span class="tag tag-minor18">👶 Menor de 18</span>' : '';
+                    const minor8Tag = guest.isMinor8 ? '<span class="tag tag-minor8">🍼 Menor de 8</span>' : '';
+                    const timeTag = guest.checkedAt ? '<span class="tag tag-time">🕐 ' + new Date(guest.checkedAt).toLocaleTimeString('pt-BR') + '</span>' : '';
+                    const minor18BtnClass = guest.isMinor18 ? 'active-18' : '';
+                    const minor8BtnClass = guest.isMinor8 ? 'active-8' : '';
+                    
+                    listHtml += '<div class="guest-item ' + checkedClass + '">' +
+                        '<input type="checkbox" class="guest-checkbox" ' + (guest.checked ? 'checked' : '') + ' onchange="toggleGuest(' + guest.id + ')">' +
+                        '<div class="guest-info">' +
+                            '<div class="guest-name" style="' + nameColor + '">' + guest.name + '</div>' +
+                            '<div class="guest-tags">' + additionalTag + minor18Tag + minor8Tag + timeTag + '</div>' +
+                        '</div>' +
+                        '<button class="btn-minor ' + minor18BtnClass + '" onclick="toggleMinor18(' + guest.id + ')">-18</button>' +
+                        '<button class="btn-minor ' + minor8BtnClass + '" onclick="toggleMinor8(' + guest.id + ')">-8</button>' +
+                        '<button class="btn-remove" onclick="removeGuest(' + guest.id + ')">✕</button>' +
+                    '</div>';
+                });
+            }
+            
+            document.getElementById('guestList').innerHTML = listHtml;
+        }
+
+        document.getElementById('newGuestName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addGuest();
+        });
+
+        loadGuests();
+    </script>
+</body>
+</html>

@@ -505,7 +505,7 @@
         }
 
         function loadGuests() {
-            const saved = sessionStorage.getItem('sevenEventosGuestList');
+            const saved = localStorage.getItem('sevenEventosGuestList');
             if (saved) {
                 try {
                     guests = JSON.parse(saved);
@@ -517,7 +517,7 @@
         }
 
         function saveGuests() {
-            sessionStorage.setItem('sevenEventosGuestList', JSON.stringify(guests));
+            localStorage.setItem('sevenEventosGuestList', JSON.stringify(guests));
         }
 
         function addGuest() {

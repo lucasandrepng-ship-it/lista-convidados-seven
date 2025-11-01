@@ -435,56 +435,8 @@
 
         <div class="actions-grid">
             <button class="btn" onclick="toggleImport()">📤 Importar Lista</button>
-            <button class="btn" onclick="toggleSync()">🔄 Sincronizar Dispositivos</button>
             <button class="btn" onclick="downloadTextReport()">📥 Baixar Relatório</button>
             <button class="btn btn-danger" onclick="clearAll()">🗑️ Limpar Tudo</button>
-        </div>
-
-        <div id="syncSection" class="card hidden">
-            <h3 class="card-title">🔄 Sincronização entre Dispositivos</h3>
-            
-            <div id="syncStatus" style="padding: 1rem; background: var(--dark); border: 1px solid rgba(212, 175, 55, 0.2); margin-bottom: 1.5rem; text-align: center;">
-                <span id="connectionStatus" style="font-size: 1.2rem; color: var(--cream);">🔴 Não Conectado</span>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                <div>
-                    <h4 style="color: var(--gold); margin-bottom: 1rem; font-size: 1.1rem;">📱 Tablet Principal</h4>
-                    <p style="color: var(--cream); margin-bottom: 1rem; font-size: 0.9rem;">
-                        Use este tablet para criar um código e compartilhar com outros dispositivos.
-                    </p>
-                    <button class="btn" onclick="createSyncCode()" style="width: 100%;">Gerar Código de Sincronização</button>
-                    <div id="generatedCode" style="margin-top: 1rem; padding: 1.5rem; background: var(--dark); border: 2px solid var(--gold); text-align: center; display: none;">
-                        <p style="color: var(--cream); margin-bottom: 0.5rem; font-size: 0.9rem;">Código de Sincronização:</p>
-                        <p id="codeDisplay" style="font-size: 2.5rem; color: var(--gold); letter-spacing: 0.3em; font-weight: bold; margin: 0;"></p>
-                        <p style="color: var(--cream); margin-top: 0.5rem; font-size: 0.8rem;">Digite este código nos outros tablets</p>
-                    </div>
-                </div>
-
-                <div>
-                    <h4 style="color: var(--gold); margin-bottom: 1rem; font-size: 1.1rem;">📱 Tablet Secundário</h4>
-                    <p style="color: var(--cream); margin-bottom: 1rem; font-size: 0.9rem;">
-                        Digite o código gerado no tablet principal para sincronizar.
-                    </p>
-                    <input type="text" id="syncCodeInput" placeholder="Digite o código (ex: ABC123)" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.2em; text-transform: uppercase;">
-                    <button class="btn" onclick="connectWithCode()" style="width: 100%;">Conectar com Código</button>
-                </div>
-            </div>
-
-            <div style="margin-top: 2rem; padding: 1rem; background: rgba(212, 175, 55, 0.1); border-left: 3px solid var(--gold);">
-                <p style="color: var(--cream); font-size: 0.85rem; line-height: 1.6;">
-                    <strong style="color: var(--gold);">ℹ️ Como Funciona:</strong><br>
-                    1. No tablet principal, clique em "Gerar Código"<br>
-                    2. Anote o código de 6 caracteres<br>
-                    3. Nos outros tablets, digite o código e clique em "Conectar"<br>
-                    4. Todas as alterações serão sincronizadas automaticamente!<br>
-                    <strong style="color: var(--gold);">⚠️ Importante:</strong> Todos os tablets precisam estar conectados à internet.
-                </p>
-            </div>
-
-            <div style="margin-top: 1.5rem;">
-                <button class="btn" onclick="toggleSync()">Fechar</button>
-            </div>
         </div>
 
         <div id="importSection" class="card hidden">
@@ -545,177 +497,6 @@
         let guests = [];
         let currentFilter = 'all';
         let searchTerm = '';
-        let syncCode = null;
-        let syncInterval = null;
-        let lastSyncTime = 0;
-
-        function generateCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = '';
-            for (let i = 0; i < 6; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
-        }
-
-        async function createSyncCode() {
-            syncCode = generateCode();
-            
-            try {
-                await window.storage.set('sync_' + syncCode, JSON.stringify({
-                    guests: guests,
-                    timestamp: Date.now(),
-                    active: true
-                }), true);
-                
-                document.getElementById('codeDisplay').textContent = syncCode;
-                document.getElementById('generatedCode').style.display = 'block';
-                
-                localStorage.setItem('sevenEventosSyncCode', syncCode);
-                
-                startSyncMonitoring();
-                updateConnectionStatus(true);
-                
-                alert('✅ Código gerado com sucesso!\n\nCompartilhe o código: ' + syncCode + '\n\nOs outros tablets devem digitar este código para sincronizar.');
-            } catch (error) {
-                alert('❌ Erro ao gerar código. Verifique sua conexão com a internet.');
-                console.error('Erro ao criar código:', error);
-            }
-        }
-
-        async function connectWithCode() {
-            const inputCode = document.getElementById('syncCodeInput').value.trim().toUpperCase();
-            
-            if (!inputCode || inputCode.length !== 6) {
-                alert('⚠️ Por favor, digite um código válido de 6 caracteres.');
-                return;
-            }
-            
-            try {
-                const result = await window.storage.get('sync_' + inputCode, true);
-                
-                if (!result || !result.value) {
-                    alert('❌ Código não encontrado ou inválido.\n\nVerifique se:\n- O código está correto\n- O tablet principal gerou o código\n- Ambos estão conectados à internet');
-                    return;
-                }
-                
-                const syncData = JSON.parse(result.value);
-                
-                if (!syncData.active) {
-                    alert('⚠️ Este código não está mais ativo.');
-                    return;
-                }
-                
-                guests = syncData.guests || [];
-                syncCode = inputCode;
-                
-                localStorage.setItem('sevenEventosSyncCode', syncCode);
-                saveGuests();
-                render();
-                
-                startSyncMonitoring();
-                updateConnectionStatus(true);
-                
-                alert('✅ Conectado com sucesso!\n\n' + guests.length + ' convidados sincronizados.\n\nTodas as alterações serão sincronizadas automaticamente.');
-                
-                toggleSync();
-            } catch (error) {
-                alert('❌ Erro ao conectar. Verifique sua conexão com a internet.');
-                console.error('Erro ao conectar:', error);
-            }
-        }
-
-        function toggleSync() {
-            const section = document.getElementById('syncSection');
-            section.classList.toggle('hidden');
-        }
-
-        function startSyncMonitoring() {
-            if (syncInterval) {
-                clearInterval(syncInterval);
-            }
-            
-            syncInterval = setInterval(async () => {
-                if (syncCode) {
-                    await syncData();
-                }
-            }, 3000);
-        }
-
-        async function syncData() {
-            if (!syncCode) return;
-            
-            try {
-                const result = await window.storage.get('sync_' + syncCode, true);
-                
-                if (result && result.value) {
-                    const syncData = JSON.parse(result.value);
-                    
-                    if (syncData.timestamp > lastSyncTime) {
-                        const currentCheckedIds = new Set(guests.filter(g => g.checked).map(g => g.id));
-                        
-                        guests = syncData.guests || [];
-                        lastSyncTime = syncData.timestamp;
-                        
-                        saveGuests();
-                        render();
-                    }
-                }
-                
-                await window.storage.set('sync_' + syncCode, JSON.stringify({
-                    guests: guests,
-                    timestamp: Date.now(),
-                    active: true
-                }), true);
-                
-                updateConnectionStatus(true);
-            } catch (error) {
-                console.error('Erro na sincronização:', error);
-                updateConnectionStatus(false);
-            }
-        }
-
-        function updateConnectionStatus(connected) {
-            const statusElement = document.getElementById('connectionStatus');
-            if (connected) {
-                statusElement.innerHTML = '🟢 Conectado e Sincronizado';
-                statusElement.style.color = 'var(--green)';
-            } else {
-                statusElement.innerHTML = '🔴 Não Conectado';
-                statusElement.style.color = 'var(--red)';
-            }
-        }
-
-        function stopSync() {
-            if (syncInterval) {
-                clearInterval(syncInterval);
-                syncInterval = null;
-            }
-            syncCode = null;
-            localStorage.removeItem('sevenEventosSyncCode');
-            updateConnectionStatus(false);
-        }
-
-        async function initSync() {
-            const savedCode = localStorage.getItem('sevenEventosSyncCode');
-            if (savedCode) {
-                syncCode = savedCode;
-                try {
-                    const result = await window.storage.get('sync_' + syncCode, true);
-                    if (result && result.value) {
-                        const syncData = JSON.parse(result.value);
-                        if (syncData.active) {
-                            startSyncMonitoring();
-                            updateConnectionStatus(true);
-                        } else {
-                            stopSync();
-                        }
-                    }
-                } catch (error) {
-                    console.log('Código de sincronização anterior não disponível');
-                }
-            }
-        }
 
         function searchGuests() {
             searchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -736,10 +517,6 @@
 
         function saveGuests() {
             localStorage.setItem('sevenEventosGuestList', JSON.stringify(guests));
-            
-            if (syncCode) {
-                syncData();
-            }
         }
 
         function addGuest() {
@@ -861,7 +638,6 @@
         function clearAll() {
             if (confirm('Deseja limpar toda a lista? Esta ação não pode ser desfeita.')) {
                 guests = [];
-                stopSync();
                 saveGuests();
                 render();
             }
@@ -1133,7 +909,6 @@
         });
 
         loadGuests();
-        initSync();
     </script>
 </body>
 </html>
